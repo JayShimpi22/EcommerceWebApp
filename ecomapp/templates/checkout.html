@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <title>Checkout</title>
+    <link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Checkout</h1>
+      <div class="row">
+        <div class="col-md-6">
+          <h3>Shipping Information</h3>
+
+          <form id="form">
+            <div id="user-info">
+              <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name"
+                  placeholder="Enter your name" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email"
+                  placeholder="Enter your email address" required>
+              </div>
+            </div>
+            <div id="shipping-info">
+              <div class="form-group">
+                <label for="city">Address</label>
+                <input type="text" class="form-control" id="address" name="address"
+                  placeholder="Address" required>
+              </div>
+              <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" class="form-control" id="city" name="city"
+                  placeholder="Enter your city" required>
+              </div>
+              <div class="form-group">
+                <label for="zipcode">Zip Code</label>
+                <input type="text" class="form-control" id="zipcode" name="zipcode"
+                  placeholder="Enter your zip code" required>
+              </div>
+              <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" class="form-control" id="state" name="state"
+                  placeholder="Enter your state" required>
+              </div>
+              <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" class="form-control" id="country" name="country"
+                  placeholder="Enter your country" required>
+              </div>
+            </div>
+            <!-- <button id="form-button" type="submit" class="btn btn-primary">Continue</button> -->
+            <input id="form-button" type='submit' class="btn btn-primary" value="Continue">
+
+          </form>
+
+          <div class='box-element hidden' id="payment-info">
+            <small>Payment Options</small>
+            <button id="make-payment">Make Payment</button>
+          </div>
+
+        </div>
+        
+        <div class="col-md-6">
+          <a href="/cart/" class="btn btn-secondary"><= Go to Cart</a>
+          <a href="/cart/" class="btn btn-success">Cart(<span id="cart">{{cartItems}}</span>)</a>
+          <h3>Order Summary</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td>{{item.product.product_name}}</td>
+                <td><img src="{{item.product.image.url}}" height="50px"></td>
+                <td>Rs. {{item.product.price}}</td>
+                <td>{{item.quantity}}</td>
+                <td>Rs. {{item.get_total}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" align="right"><strong>Total:</strong></td>
+                <td>Rs. {{order.get_cart_total}}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <a href="/">Go Back to Home?</a>
+    </div>
+
+  </body>
+
+  <script type="text/javascript">
+
+function getToken(name) {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  const cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      const cookie = cookies[i].trim();
+                      // Does this cookie string begin with the name we want?
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          const csrftoken = getToken('csrftoken');
+
+
+
+          var user = '{{request.user}}'
+
+      </script>
+
+  <script>
+
+    var total = '{{order.get_cart_total}}'
+    if (user!="AnonymousUser")
+    {
+      document.getElementById("user-info").innerHTML=''
+      // document.getElementById("shipping-info").innerHTML=''
+    }
+
+  var form = document.getElementById("form")
+  form.addEventListener('submit',function(e){
+      e.preventDefault()
+      console.log("Submitted form")
+      document.getElementById('form-button').classList.add('hidden')
+      document.getElementById('payment-info').classList.remove('hidden')
+  })
+
+  document.getElementById('make-payment').addEventListener('click',function(e){
+    submitFormData()
+  })
+
+
+  function submitFormData()
+  {
+    console.log("Submitted Data")
+    var userFormData = {
+      'name':null,
+      'email':null,
+      'total':total,
+
+    } 
+    var shippingInfo = {
+      'address':null,
+      'city':null,
+      'state':null,
+      'zipcode':null,
+    }
+
+    shippingInfo.address = form.address.value
+    shippingInfo.city = form.city.value
+    shippingInfo.state = form.state.value
+    shippingInfo.zipcode = form.zipcode.value
+
+    if (user=='AnonymousUser')
+    {
+      userFormData.name = form.name.value
+      userFormData.email = form.name.value
+    }
+    
+    var url = '/process_order/'
+    fetch(url,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken':csrftoken,
+      },
+      body:JSON.stringify({'form':userFormData,'shipping':shippingInfo}),
+    })
+    .then((response)=>response.json())
+    .then((data)=>{
+      console.log("Success",data);
+      alert("Transaction Complete");
+      cart = {}
+      document.cookie = 'cart='+JSON.stringify(cart)+";domain=;path=/"
+
+      window.location.href = "{% url 'home' %}"
+    })
+  }
+</script>
+</html>

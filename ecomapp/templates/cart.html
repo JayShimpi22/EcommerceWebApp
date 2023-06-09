@@ -1,0 +1,198 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Shopping Cart</title>
+    <link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Shopping Cart</h1>
+      <a href="/cart/" class="btn btn-success">Cart(<span id="cart">{{cartItems}}</span>)</a>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Product</th>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{forloop.counter}}</td>
+            <td><img src="/media/{{item.product.image}}" height="50px"></td>
+            <td>{{item.product.product_name}}</td>
+            <td>{{item.product.price}}</td>
+            <td>
+              <!-- {{item}} -->
+              <a data-product="{{item.product.product_id}}" data-action="remove"
+                class="btn btn-success update-cart" style="color: aliceblue;">-</a>
+              {{item.quantity}}
+              <a data-product="{{item.product.product_id}}" data-action="add"
+                class="btn btn-success update-cart" style="color: aliceblue;">+</a>
+            </td>
+
+            <td>{{item.get_total}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan="3" align="right"><strong>Items:</strong></td>
+            <td>{{order.get_cart_items}}</td>
+
+            <td colspan="3" align="right"><strong>Total:</strong></td>
+            <td>Rs. {{order.get_cart_total}}</td>
+          </tr>
+
+        </tfoot>
+      </table>
+      <a href="/">Go Back to Home?</a>
+      <a href="/checkout/" type="button" class="btn btn-secondary">Checkout</a>
+    </div>
+
+  </body>
+  <script>
+
+  function getToken(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+  const csrftoken = getToken('csrftoken');
+
+
+
+  var user = '{{request.user}}'
+
+  
+  function getCookie(name)
+          {
+            var cookieArr = document.cookie.split(";");
+
+            for(var i=0;i<cookieArr.length;i++)
+            {
+              cookiePair = cookieArr[i].split("=");
+              if(cookiePair[0].trim()==name)
+              {
+                return decodeURIComponent(cookiePair[1]);
+              }
+            }
+
+            return null;
+          }
+
+          var cart = JSON.parse(getCookie('cart'));
+          console.log('cart',cart);
+
+          if (cart==undefined)
+          {
+            cart = {}
+            document.cookie = 'cart='+JSON.stringify(cart)+";domain=;path=/"
+            console.log("cart was created");
+          }
+        
+
+
+
+  var btns = document.getElementsByClassName("update-cart");
+  console.log("Hello World",user);
+
+for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener("click", function() {
+        var prodId = this.dataset.product
+        var action = this.dataset.action
+        console.log("pid", prodId, "action",action);
+
+        if (user == 'AnonymousUser') {
+            console.log("User is not authenticated")
+            addCookieItem(prodId,action);
+        }
+        else
+        {
+            console.log("update",prodId)
+            updateCart(prodId, action);
+        }
+    })
+}
+
+function addCookieItem(productId,action)
+{
+    if (action=='add')
+    {
+        if (cart[productId]==undefined)
+        {
+            cart[productId] = {'quantity':1}
+        }
+        else
+        {
+            cart[productId]['quantity'] +=1
+        }
+    }
+    else if(action=='remove')
+    {
+        console.log("REMOVE",cart[productId],productId)
+        if(cart[productId]['quantity']==1)
+        {
+            console.log(cart[productId],"cart item removed")
+            delete cart[productId] 
+        }
+        else
+        {
+            cart[productId]['quantity']-=1;
+        }
+    }
+    console.log("addCookieItem",cart);
+    document.cookie = 'cart='+JSON.stringify(cart)+";domain=;path=/"
+    location.reload();
+}
+
+
+function updateCart(prodId, action) {
+    var url = '/update_item/'
+    console.log("prodId",prodId);
+    fetch(url, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'productId': prodId, 'action': action })
+
+    })
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            console.log("Data:", data)
+            location.reload();
+        });
+}
+
+
+</script>
+
+  <!-- <script src="{% static 'assets/js/personal.js' %}"></script> -->
+
+</html>

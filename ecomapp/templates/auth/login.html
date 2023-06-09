@@ -1,0 +1,75 @@
+{% extends 'nav.html' %}
+
+{% block title %}
+ Jay EcomStore
+{% endblock %}
+{% block style %}
+<style>
+.btn{
+    font-family: "Raleway", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 1px;
+    display: inline-block;
+    padding: 10px 30px;
+    border-radius: 50px;
+    transition: 0.5s;
+    color: #3498db;
+    border: 2px solid #3498db;
+}
+
+.btn:hover{
+    background-color:black;
+    color:white;
+}
+
+</style>
+
+{% endblock %}
+
+{% block body %}
+<section id="contact" class="contact">
+    <div class="container">
+
+      <div class="section-title" data-aos="fade-up">
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-4">
+<br>
+<br>
+    <h1 data-aos="fade-up">Login</h1>
+
+    {% for message in messages %}
+
+    <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+        <strong></strong> {{message}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+   
+  <form  method="POST">
+    {% csrf_token %}
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br><br>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="pass1" name="pass1" required><br><br>
+    
+  
+    <button type="submit" class="btn">Login</button>
+
+    <br>
+    Not a User? <a href="/auth/signup/">Signup</a><br>
+    <span>Forget Password? <a href="/auth/reset-password/">Reset Password</a></span> 
+    <br>
+  </form>
+        </div>
+        <div class="col-md-6">
+
+        </div>
+    </div>
+</div>
+</div>
+</section>
+
+{% endblock %}
